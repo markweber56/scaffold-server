@@ -7,6 +7,7 @@ from random import randint
 allowed_origins = [
     "http://localhost:3000",
     "https://scaffold-web"
+    "https://scaffold-web"
 ]
 
 app = Flask(__name__)
@@ -36,6 +37,10 @@ def determine_allowed_origin(origin):
         if origin and origin.startswith(allowed_origin):
             print(f'origin: {origin} is allowed')
             return origin
+        elif origin is None:
+            print(f'origin is None allowing request')
+            return '*'
+        
     print(f'origin {origin} not allowed')
     return 'null' # Deny requests from other origins
 
