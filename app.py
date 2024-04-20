@@ -4,7 +4,7 @@ from random import randint
 
 allowed_origins = [
     "http://localhost:3000",
-    "https://scaffold-web-c43c33ecc8e5.herokuapp.com/"
+    "https://scaffold-web-c43c33ecc8e5.herokuapp.com"
 ]
 
 app = Flask(__name__)
