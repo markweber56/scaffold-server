@@ -7,7 +7,7 @@ from random import randint
 allowed_origins = [
     "http://localhost:3000",
     "https://scaffold-web"
-    "https://scaffold-web"
+    
 ]
 
 app = Flask(__name__)
@@ -34,7 +34,10 @@ def apply_cors(response):
 def determine_allowed_origin(origin):
     # Check if the origin matches the pattern you want to allow
     for allowed_origin in allowed_origins:
+        print(f"origin: {origin}")
         if origin and origin.startswith(allowed_origin):
+            print(f"allowed origin: {allowed_origin}")
+            print(f"origin starts with: {origin.startswith(allowed_origin)}")
             print(f'origin: {origin} is allowed')
             return origin
         elif origin is None:
