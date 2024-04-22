@@ -1,1 +1,9 @@
+# virtual environment folder
 venv/
+
+#environment variables
+.env
+
+sandbox/
+
+**/__pycache__
