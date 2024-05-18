@@ -18,6 +18,12 @@ DATABASE_URI = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST
 RATELIMIT_ENABLED = os.environ.get("RATELIMIT_ENABLED", "False") == "True"
 RATELIMIT_STORAGE_URI = os.environ.get("RATELIMIT_STORAGE_URI", "memory://")
 
+# redis
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
+REDIS_PORT = os.environ.get("REDIS_PORT", 6379)
+REDIS_URL = f'redis://:@localhost:{REDIS_PORT}/0'
+
+
 class Config:
     # Flask
     TESTING = True
@@ -31,7 +37,12 @@ class Config:
     RATELIMIT_STRATEGY = "fixed-window"  # or "moving-window"
     RATELIMIT_IN_MEMORY_FALLBACK_ENABLED = True
     RATELIMIT_HEADERS_ENABLED = True
+    # Redis
+    REDIS_URL = REDIS_URL
+    # Misc
+    DATETIME_STRING_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+
 
 if __name__ == '__main__':
     # test
-    print(f'DATABSE: {DevConfig.SQLALCHEMY_DATABASE_URI}')
+    print(f'DATABSE: {Config.SQLALCHEMY_DATABASE_URI}')

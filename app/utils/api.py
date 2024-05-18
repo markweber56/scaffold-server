@@ -1,8 +1,10 @@
-# Flask modules
-from flask import Response
+import jwt
 
-# Local modules
+from flask import Response
+from datetime import datetime, timedelta
+
 from app.utils.models import SerializableClass
+from app.config.common import Config
 
 
 class APIResponse(SerializableClass):
@@ -110,3 +112,18 @@ def error_response(
             response.set_cookie(key, value)
 
     return response, status
+
+
+def generate_jwt(user_id: str):
+
+    payload = {
+        'user_id': user_id,
+        'exp': str(datetime.utcnow() + timedelta(minutes=30))
+    }
+
+    token = jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')
+    return token
+
+
+def decode_jwt(encoded_jwt: str):
+    return jwt.decode(encoded_jwt, Config.SECRET_KEY, algorithms=["HS256"])
