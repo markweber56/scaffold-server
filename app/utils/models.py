@@ -27,7 +27,7 @@ class SerializableClass:
         try:
             json.dumps(obj)
             return True
-        except:
+        except Exception:
             return False
 
 

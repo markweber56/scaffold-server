@@ -16,6 +16,6 @@ def default_error_responder(request_limit: RequestLimit):
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["30/minute"],
-    auto_check=False,
+    # auto_check=False,
     on_breach=default_error_responder,
 )
