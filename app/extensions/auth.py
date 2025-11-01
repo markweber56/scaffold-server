@@ -4,7 +4,8 @@ from flask_bcrypt import Bcrypt
 from flask_wtf.csrf import CSRFProtect
 
 # Local modules
-from app.models.auth import User
+# from app.models.auth import User
+# from app.models.auth import User
 
 bcrypt = Bcrypt()
 csrf = CSRFProtect()
@@ -14,6 +15,6 @@ login_manager.login_view = "auth.login"
 login_manager.login_message_category = "info"
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.filter_by(id=user_id).one_or_none()
+# @login_manager.user_loader
+# def load_user(user_id):
+#     return User.query.filter_by(id=user_id).one_or_none()

@@ -1,14 +1,11 @@
-import jwt
-
 from flask import Blueprint, request
 from flask_bcrypt import Bcrypt
 from flask_limiter import ExemptionScope
 
-from app.config.common import Config
 from app.extensions import limiter, redis_client
-from app.utils.api import error_response, success_response, generate_jwt, decode_jwt
+from app.utils.api import error_response, success_response, generate_jwt
 from app.utils.request_validators import Validator
-from app.models.auth import User
+from app.models import User
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 limiter.exempt(
@@ -18,6 +15,7 @@ limiter.exempt(
     | ExemptionScope.DESCENDENTS,
 )
 bcrypt = Bcrypt()
+
 
 @auth_bp.route('/signup', methods=["POST"])
 def signup_user():
@@ -30,17 +28,18 @@ def login():
     request_is_valid = Validator('auth/login', request).validate()
 
     if request_is_valid:
-        email = request.form['email']
-        password = request.form['password']
+        request_json = request.get_json()
+        email = request_json['email']
+        password = request_json['password']
         user = User.query.filter_by(email=email).first()
 
         if user is None:
             return error_response(message=f'Account for email address {email} not found')
-        
+
         valid_password = bcrypt.check_password_hash(user.password_hash, password)
         if not valid_password:
             return error_response('Incorrect password')
-        
+
         user_id = user.id
         jwt_token = generate_jwt(user_id)
 
@@ -51,10 +50,10 @@ def login():
             'user_id': user_id,
             'token': jwt_token
         }
-        
+
         return success_response(
             message=response_message,
             data=response_data
         )
-    
+
     return error_response(message="Invalid request")

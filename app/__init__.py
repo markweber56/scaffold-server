@@ -40,6 +40,6 @@ def create_app(debug: bool = False):
 
     # Global Ratelimit Checker
     # this is used because auto_check is set to 'False'
-    app.before_request(lambda: limiter.check())
+    # app.before_request(lambda: limiter.check())
 
     return app
