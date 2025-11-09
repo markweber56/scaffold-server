@@ -77,7 +77,8 @@ class Validator:
         return True
 
     def has_required_headers(self):
-        required_headers = ['Authorization', 'X-User-ID']
+        # required_headers = ['Authorization', 'X-User-ID']
+        required_headers = ['Authorization']
         has_required_headers = True
         missing_headers = []
         for header in required_headers:

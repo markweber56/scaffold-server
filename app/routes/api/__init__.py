@@ -1,15 +1,11 @@
-from flask import Blueprint, request
-from functools import wraps
-from sqlalchemy import text
-# from flask.wrappers import Response
+from flask import Blueprint, jsonify, request
 from flask_limiter import ExemptionScope
-# from werkzeug.exceptions import HTTPException
-# from flask_limiter.errors import RateLimitExceeded
-
-# import logging
+from functools import wraps
+from jwt.exceptions import DecodeError, ExpiredSignatureError
+from sqlalchemy import text
 
 from app.extensions import limiter, csrf, redis_client
-from app.utils.api import error_response, success_response
+from app.utils.api import decode_jwt, error_response, success_response
 from app.utils.request_validators import Validator
 from app.models.auth import User
 # from app.utils.cache import get_cached_response, set_cached_response
@@ -26,11 +22,25 @@ limiter.exempt(
 def jwt_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        request_is_valid = Validator('api', request).validate()
+        # request_is_valid = Validator('api', request).validate()
+        auth_header = request.headers.get('Authorization', None)
+        if not auth_header:
+            return jsonify({"message": "Authorization header missing"}), 401  #TODO: update to return error_respobse, update error response to have code as argument also put codes in class / enum
+        try:
+            token = auth_header.split()[1]  # Expect 'Bearer <token>'
+        except IndexError:
+            return jsonify({"message": "Invalid authorization header"}), 401
+        try:
+            data = decode_jwt(token)
+        except DecodeError:
+            return jsonify({"message": "Error decoding token"}), 401
+        except ExpiredSignatureError:
+            return jsonify({"message": "Token has expired"}), 401
 
-        redis_val = redis_client.get("mykey")
-
-        # TODO: finish this
+        user_id = data['user_id']
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"message": "Invalid user"}), 401
 
         return f(*args, **kwargs)
     return decorated_function
@@ -44,6 +54,7 @@ def test_api_hello():
 
 @limiter.limit("100 per day;10 per hour")
 @api_bp.route("/data", methods=["GET"])
+@jwt_auth
 def get_data():
     return success_response(data={'a': 1, 'b': 2}, message="here's some data")
 
