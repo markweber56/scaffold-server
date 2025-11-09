@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.extensions import limiter, csrf, redis_client
 from app.utils.api import decode_jwt, error_response, success_response
 from app.utils.request_validators import Validator
-from app.models.auth import User
+from app.models import Price, Security, User
 # from app.utils.cache import get_cached_response, set_cached_response
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -25,7 +25,7 @@ def jwt_auth(f):
         # request_is_valid = Validator('api', request).validate()
         auth_header = request.headers.get('Authorization', None)
         if not auth_header:
-            return jsonify({"message": "Authorization header missing"}), 401  #TODO: update to return error_respobse, update error response to have code as argument also put codes in class / enum
+            return jsonify({"message": "Authorization header missing"}), 401  # TODO: update to return error_response, update error response to have code as argument also put codes in class / enum
         try:
             token = auth_header.split()[1]  # Expect 'Bearer <token>'
         except IndexError:
@@ -57,6 +57,27 @@ def test_api_hello():
 @jwt_auth
 def get_data():
     return success_response(data={'a': 1, 'b': 2}, message="here's some data")
+
+
+@api_bp.route("/tickers", methods=["GET"])
+@limiter.limit("10000 per day;10000 per hour")
+@jwt_auth
+def get_tickers():
+    tickers = [s.ticker for s in Security.query.all()]
+    return success_response(data={'tickers': tickers})
+
+
+@api_bp.route("/ticker-data", methods=["GET"])
+@limiter.limit("10000 per day; 10000 per hour")
+@jwt_auth
+def get_ticker_data():
+    ticker = request.args.get('ticker')
+    query_data = Price.query.filter(Price.ticker == ticker).all()
+    timestamps = [qd.utc_time.isoformat() for qd in query_data]
+    quote_prices = [qd.price for qd in query_data]
+    data = {"timestamps": timestamps, "quote_prices": quote_prices}
+
+    return success_response(message=f"data for {ticker}", data=data)
 
 
 @limiter.limit("100 per day;10 per hour")
