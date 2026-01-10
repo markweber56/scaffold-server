@@ -118,7 +118,7 @@ def generate_jwt(user_id: str):
 
     payload = {
         'user_id': user_id,
-        'exp': datetime.utcnow() + timedelta(minutes=30)
+        'exp': datetime.utcnow() + timedelta(minutes=300)
     }
 
     token = jwt.encode(payload, Config.SECRET_KEY, algorithm='HS256')

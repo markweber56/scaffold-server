@@ -72,10 +72,10 @@ def get_tickers():
 @jwt_auth
 def get_ticker_data():
     ticker = request.args.get('ticker')
+
     query_data = Price.query.filter(Price.ticker == ticker).all()
-    timestamps = [qd.utc_time.isoformat() for qd in query_data]
-    quote_prices = [qd.price for qd in query_data]
-    data = {"timestamps": timestamps, "quote_prices": quote_prices}
+
+    data = [[qd.utc_time.isoformat(), qd.price] for qd in query_data]
 
     return success_response(message=f"data for {ticker}", data=data)
 
