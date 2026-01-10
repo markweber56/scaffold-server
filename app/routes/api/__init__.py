@@ -2,12 +2,12 @@ from flask import Blueprint, jsonify, request
 from flask_limiter import ExemptionScope
 from functools import wraps
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-from sqlalchemy import text
+from sqlalchemy import text, func, cast, Date
 
 from app.extensions import limiter, csrf, redis_client
 from app.utils.api import decode_jwt, error_response, success_response
 from app.utils.request_validators import Validator
-from app.models import Price, Security, User
+from app.models import Price, Security, User, Velocity
 # from app.utils.cache import get_cached_response, set_cached_response
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -67,15 +67,39 @@ def get_tickers():
     return success_response(data={'tickers': tickers})
 
 
+@api_bp.route("/available-dates", methods=["GET"])
+@limiter.limit("10000 per day; 10000 per hour")
+@jwt_auth
+def get_available_dates():
+    ticker = request.args.get('ticker')
+
+    dates_query = Price.query.filter(Price.ticker == ticker).with_entities(
+        func.date(Price.utc_time).label('date')
+    ).distinct().order_by(func.date(Price.utc_time))
+
+    dates = [str(d.date) for d in dates_query.all()]
+
+    return success_response(data={'dates': dates})
+
+
 @api_bp.route("/ticker-data", methods=["GET"])
 @limiter.limit("10000 per day; 10000 per hour")
 @jwt_auth
 def get_ticker_data():
     ticker = request.args.get('ticker')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
-    query_data = Price.query.filter(Price.ticker == ticker).all()
+    query = Velocity.query.filter(Velocity.ticker == ticker)
 
-    data = [[qd.utc_time.isoformat(), qd.price] for qd in query_data]
+    if start_date:
+        query = query.filter(Velocity.utc_time >= start_date)
+    if end_date:
+        query = query.filter(Velocity.utc_time <= end_date + ' 23:59:59')
+
+    query_data = query.order_by(Velocity.utc_time).all()
+
+    data = [[qd.utc_time.isoformat(), qd.price, qd.v30] for qd in query_data]
 
     return success_response(message=f"data for {ticker}", data=data)
 
