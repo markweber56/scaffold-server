@@ -1,9 +1,12 @@
 from .auth import User
-from .securities import Security
 from .prices import Price
+from .securities import Security
+from .velocity import Velocity
+
 
 __all__ = [
-    User,
-    Security,
-    Price
+  Price,
+  Security,
+  User,
+  Velocity
 ]
